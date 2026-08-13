@@ -26,14 +26,14 @@ services:
     image: mariadb:inception
     container_name: mariadb
     env_file: [ .env ]
-  secrets:
-    - db_password
-    - db_root_password
-    - credentials
-  volumes:
-    - db_data:/var/lib/mysql
-  networks: [ inception ]
-  restart: always
+    secrets:
+      - db_password
+      - db_root_password
+      - credentials
+    volumes:
+      - db_data:/var/lib/mysql
+    networks: [ inception ]
+    restart: always
 
 wordpress:
   build: ./requirements/wordpress
