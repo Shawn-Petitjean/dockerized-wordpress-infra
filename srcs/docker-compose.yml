@@ -11,12 +11,12 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${HOME}/data/db_data # bind mount to user's home data directory
+      device: ${DATA_PATH}/db_data # bind mount to host data directory from Makefile
   wp_data:
     driver_opts:
       type: none
       o: bind
-      device: ${HOME}/data/wp_data
+      device: ${DATA_PATH}/wp_data
 networks:
   inception:
     driver: bridge
