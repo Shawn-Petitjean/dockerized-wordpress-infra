@@ -3,17 +3,17 @@ DATA_PATH = /home/$(LOGIN)/data
 COMPOSE = docker-compose -f srcs/docker-compose.yml
 all: up
 up:
-nmkdir -p $(DATA_PATH)/db_data
-nmkdir -p $(DATA_PATH)/wp_data
-n$(COMPOSE) up --build -d
+ 	mkdir -p $(DATA_PATH)/db_data
+ 	mkdir -p $(DATA_PATH)/wp_data
+ 	$(COMPOSE) up --build -d
 stop:
-n$(COMPOSE) stop
+ 	$(COMPOSE) stop
 down:
-n$(COMPOSE) down
+ 	$(COMPOSE) down
 clean: down
-n$(COMPOSE) down --rmi all
+ 	$(COMPOSE) down --rmi all
 fclean: clean
-nsudo rm -rf $(DATA_PATH)/db_data
-nsudo rm -rf $(DATA_PATH)/wp_data
+ 	sudo rm -rf $(DATA_PATH)/db_data
+ 	sudo rm -rf $(DATA_PATH)/wp_data
 re: fclean all
 .PHONY: all up stop down clean fclean re
