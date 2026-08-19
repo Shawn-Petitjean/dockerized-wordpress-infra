@@ -11,7 +11,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${DATA_PATH}/db_data # bind mount to host data directory from Makefile
+      device: ${DATA_PATH}/db_data
   wp_data:
     driver_opts:
       type: none
@@ -39,7 +39,7 @@ services:
     build: ./requirements/wordpress
     image: wordpress:inception
     container_name: wordpress
-    depends_on: [ mariadb ] # démarre après mariadb
+    depends_on: [ mariadb ]
     env_file: [ .env ]
     secrets:
       - db_password
@@ -53,11 +53,11 @@ services:
     build: ./requirements/nginx
     image: nginx:inception
     container_name: nginx
-    depends_on: [ wordpress ] # démarre après wordpress
+    depends_on: [ wordpress ]
     env_file: [ .env ]
     volumes:
-      - wp_data:/var/www/wordpress # même volume que wordpress
+      - wp_data:/var/www/wordpress
     networks: [ inception ]
     ports:
-      - "443:443" # seul port exposé à l'extérieur
+      - "443:443"
     restart: always

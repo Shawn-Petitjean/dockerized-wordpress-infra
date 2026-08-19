@@ -2,17 +2,15 @@
 set -e
 mkdir -p /run/mysqld
 chown mysql:mysql /run/mysqld
-# Autoriser les connexions depuis tous les conteneurs (pas juste localhost)
 sed -i "s/bind-address.*/bind-address = 0.0.0.0/" \
 /etc/mysql/mariadb.conf.d/50-server.cnf
-# Lecture des secrets montés par Docker
 MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 MYSQL_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
 MYSQL_ADMIN_PASSWORD=$(grep "WP_ADMIN_PASSWORD=" /run/secrets/credentials \
 | cut -d'=' -f2)
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 mariadb-install-db --user=mysql --datadir=/var/lib/mysql
-mysqld --user=mysql & # démarrage temporaire pour l'init SQL
+mysqld --user=mysql &
 until mysqladmin ping >/dev/null 2>&1; do
 sleep 1
 done
