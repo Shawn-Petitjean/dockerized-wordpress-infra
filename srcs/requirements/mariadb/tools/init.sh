@@ -27,4 +27,4 @@ FLUSH PRIVILEGES;
 EOF
 mysqladmin shutdown -uroot -p"${MYSQL_ROOT_PASSWORD}"
 fi
-exec mysqld --user=mysql # PID 1, foreground
+exec mysqld --user=mysql 
