@@ -39,8 +39,8 @@ Avant de lancer le projet, il faut disposer de :
 - Docker
 - Docker Compose
 - `make`
-- un système Linux/VM adapté au projet 42
-- un nom de domaine local configuré vers la machine, ici `shapetit.42.fr`
+- un système Linux (ou une machine virtuelle Linux)
+- un nom de domaine local configuré vers la machine, ici `shapetit.local`
 
 Le projet utilise Debian Bullseye Slim comme base des trois images.
 
@@ -73,7 +73,7 @@ srcs/.env
 avec par exemple :
 
 ```env
-DOMAIN_NAME=shapetit.42.fr
+DOMAIN_NAME=shapetit.local
 
 MYSQL_DATABASE=wordpress
 MYSQL_USER=shapetit_user
@@ -141,7 +141,7 @@ Les données sont stockées dans :
 Une fois les conteneurs démarrés, le site est accessible en HTTPS :
 
 ```text
-https://shapetit.42.fr
+https://shapetit.local
 ```
 
 Le port utilisé est :
@@ -388,7 +388,7 @@ make
 Puis ouvrir :
 
 ```text
-https://shapetit.42.fr
+https://shapetit.local
 ```
 
 Pour arrêter temporairement :

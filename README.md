@@ -1,5 +1,3 @@
-*This project has been created as part of the 42 curriculum by shapetit*
-
 # Inception
 
 ---
@@ -7,7 +5,7 @@
 ## 📌 Description
 
 ### Project Overview & Goals
-**Inception** is a System Administration and DevOps project part of the 42 curriculum. The goal is to build, configure, and orchestrate a secure, multi-service web infrastructure inside a dedicated Virtual Machine using **Docker** and **Docker Compose**.
+**Inception** is a System Administration and DevOps project. The goal is to build, configure, and orchestrate a secure, multi-service web infrastructure inside a dedicated Virtual Machine using **Docker** and **Docker Compose**.
 
 The infrastructure hosts a dynamic **WordPress** website backed by a **MariaDB** database, served through a secure **NGINX** reverse proxy. Rather than using pre-packaged or monolithic solutions, the project enforces strict industry best practices:
 - Every container image is built locally from scratch via dedicated Dockerfiles based on **Debian Bullseye** (`debian:bullseye-slim`, the penultimate stable release).
@@ -22,7 +20,7 @@ The infrastructure hosts a dynamic **WordPress** website backed by a **MariaDB**
 
 ```mermaid
 flowchart TD
-    Client(["🌐 Client Browser\n(https://shapetit.42.fr)"]) -->|HTTPS :443\nTLSv1.2 / TLSv1.3| NGINX["🛡️ NGINX Container\n(:443)"]
+    Client(["🌐 Client Browser\n(https://shapetit.local)"]) -->|HTTPS :443\nTLSv1.2 / TLSv1.3| NGINX["🛡️ NGINX Container\n(:443)"]
 
     subgraph Internal_Network ["Docker Bridge Network: inception"]
         NGINX -->|FastCGI :9000| WordPress["⚙️ WordPress + PHP-FPM\n(:9000)"]
@@ -42,7 +40,7 @@ flowchart TD
 ```
 
 ### Request and Data Flow
-1. **Client Connection**: The client accesses `https://shapetit.42.fr:443`. NGINX handles TLS termination using a self-signed TLS certificate generated via OpenSSL with strict TLSv1.2/TLSv1.3 cipher protocols.
+1. **Client Connection**: The client accesses `https://shapetit.local:443`. NGINX handles TLS termination using a self-signed TLS certificate generated via OpenSSL with strict TLSv1.2/TLSv1.3 cipher protocols.
 2. **Static vs Dynamic Routing**: NGINX reads static assets directly from the shared volume `/var/www/wordpress`. Any request for PHP scripts is routed over the private `inception` network via the FastCGI protocol to `wordpress:9000`.
 3. **Database Queries**: The WordPress container processes PHP requests using PHP-FPM 7.4 and communicates with the `mariadb` container on port `3306` over the private bridge network.
 4. **Network Shielding**: No ports other than `443` are exposed to the host machine or public internet. MariaDB and PHP-FPM remain completely shielded behind the bridge network.
@@ -58,7 +56,7 @@ flowchart TD
 | **Startup Time** | Minutes (must boot full operating system and system services). | Milliseconds to seconds (instantiates directly as native host processes). |
 | **Resource Overhead** | High CPU, RAM, and disk footprint due to duplicated guest OS kernels and virtualized hardware abstractions. | Extremely lightweight; only consumes resources needed for application execution and dependencies. |
 | **Isolation Level** | Hardware-level isolation enforced by the hypervisor; very strong security boundary. | Process-level isolation enforced by Linux kernel namespaces (PID, NET, IPC, MNT, UTS, USER); highly secure when non-root and least-privilege principles are followed. |
-| **Project Usage** | The 42 subject requires running the entire infrastructure inside a dedicated Linux Virtual Machine. | Inside the VM, Docker is used to orchestrate microservices without compounding hypervisor overhead. |
+| **Project Usage** | The entire infrastructure runs inside a dedicated Linux Virtual Machine. | Inside the VM, Docker is used to orchestrate microservices without compounding hypervisor overhead. |
 
 #### 2. Secrets vs Environment Variables
 | Criterion | Environment Variables (`.env`) | Docker Secrets (`/run/secrets/`) |
@@ -74,14 +72,14 @@ flowchart TD
 | **Isolation** | No network isolation: the container shares the host machine's network stack directly. | Full network virtualization: the container receives its own network namespace, IP address, and virtual interface (`veth`). |
 | **Port Conflicts** | Containers compete directly with host services and other containers for ports. | Internal ports do not conflict with host ports. Services can use default ports (e.g. `3306`, `9000`) without exposing them to the host. |
 | **Service Discovery** | No automated DNS discovery; services must communicate via `localhost` or hardcoded host IPs. | Built-in Docker DNS resolver enables seamless service discovery using service names (e.g., `mariadb`, `wordpress`). |
-| **Subject Compliance** | **Strictly forbidden** by the subject (`network: host or --link is forbidden`). | **Mandatory**: all containers communicate via an isolated user-defined bridge network. |
+| **Architecture Choice** | **Avoided** (`network_mode: host` and `--link` break container isolation). | **Enforced**: all containers communicate via an isolated user-defined bridge network. |
 
 #### 4. Docker Volumes vs Bind Mounts
 | Criterion | Bind Mounts (`host_path:container_path`) | Docker Named Volumes (`volume_name:container_path`) |
 | :--- | :--- | :--- |
 | **Management** | Tied to an arbitrary host directory. Bypasses Docker volume management subsystem; not visible in `docker volume ls`. | Managed and tracked directly by Docker (`docker volume ls`, `docker volume inspect`, `docker volume rm`). |
 | **Portability & Permissions** | Heavily dependent on host directory paths and host OS permission structures; less portable across different environments. | Abstracted from host filesystem layouts; lifecycle and driver behavior are consistently managed by Docker. |
-| **Subject Requirement** | The subject explicitly specifies: *“You must use Docker named volumes for these two persistent storages. Bind mounts are not allowed for these volumes.”* | Named volumes are declared in `docker-compose.yml` and configured with driver options (`driver_opts`) to target `/home/shapetit/data`. |
+| **Storage Strategy** | Standard bind mounts are avoided for persistent data storage. | Named volumes are declared in `docker-compose.yml` and configured with driver options (`driver_opts`) to target `/home/shapetit/data`. |
 | **Project Implementation** | Named volumes `db_data` and `wp_data` are declared under the top-level `volumes:` section using the `local` driver with `o: bind` options, ensuring they are registered Docker named volumes while persisting data in the host's `/home/shapetit/data`. |
 
 ---
@@ -129,31 +127,31 @@ flowchart TD
 
 | Service | Base OS | Internal Port | Exposed Port | Purpose & Implementation Details |
 | :--- | :--- | :--- | :--- | :--- |
-| **`nginx`** | `debian:bullseye-slim` | `443` | `443:443` | Reverse proxy and TLS termination gateway. Configured exclusively for **TLSv1.2** and **TLSv1.3**. Generates a self-signed RSA certificate for `shapetit.42.fr` using OpenSSL. Routes static files directly from `/var/www/wordpress` and forwards PHP requests to `wordpress:9000`. |
+| **`nginx`** | `debian:bullseye-slim` | `443` | `443:443` | Reverse proxy and TLS termination gateway. Configured exclusively for **TLSv1.2** and **TLSv1.3**. Generates a self-signed RSA certificate for `shapetit.local` using OpenSSL. Routes static files directly from `/var/www/wordpress` and forwards PHP requests to `wordpress:9000`. |
 | **`wordpress`** | `debian:bullseye-slim` | `9000` | *None* | Runs **PHP-FPM 7.4** with WordPress core files. On startup, waits for MariaDB readiness via `mysqladmin ping`, downloads WordPress core, generates `wp-config.php`, installs the site, creates an administrator user (non-admin naming) and an author user via **WP-CLI**. Runs PHP-FPM in foreground (`php-fpm7.4 -F`). |
 | **`mariadb`** | `debian:bullseye-slim` | `3306` | *None* | Relational database server. Initializes system databases, creates the `wordpress` database, creates dedicated WordPress user and root user with passwords read from `/run/secrets/`, removes anonymous users, flushes privileges, and replaces process with `exec mysqld --user=mysql`. |
 
-### Key Compliance Rules:
-- **No Infinite Loops / Hacky Patches**: In compliance with subject rules, no containers rely on `tail -f`, `sleep infinity`, or `while true` loops. Daemons run in foreground (`nginx -g 'daemon off;'`, `php-fpm7.4 -F`, `exec mysqld --user=mysql`) to properly handle **PID 1** signals.
+### Key Design Principles:
+- **No Infinite Loops / Hacky Patches**: No containers rely on `tail -f`, `sleep infinity`, or `while true` loops. Daemons run in foreground (`nginx -g 'daemon off;'`, `php-fpm7.4 -F`, `exec mysqld --user=mysql`) to properly handle **PID 1** signals.
 - **Restart Policy**: All services specify `restart: always` to recover automatically from unexpected crashes.
-- **Administrator Username Restriction**: The WordPress administrator username is configured as `shapetit_wp`, strictly avoiding prohibited terms such as `admin`, `Admin`, `administrator`, or `Administrator`.
+- **Administrator Username Restriction**: The WordPress administrator username is configured as `shapetit_wp`, strictly avoiding generic terms such as `admin`, `Admin`, `administrator`, or `Administrator`.
 
 ---
 
 ## 🚀 Instructions
 
 ### 1. Prerequisites
-- **Operating System**: Linux (Debian, Ubuntu, or 42 Virtual Machine) or macOS with Docker support.
+- **Operating System**: Linux (Debian, Ubuntu, or Linux Virtual Machine) or macOS with Docker support.
 - **Docker Engine**: Version `>= 20.10`
 - **Docker Compose**: Version `>= 2.0` (or `docker-compose` v1)
 - **Make**: Standard GNU Make build utility.
 - **Root/Sudo Access**: Required to configure `/etc/hosts` and create persistent host directories in `/home/shapetit/data`.
 
 ### 2. Local Domain Setup
-The infrastructure is configured to serve under domain `shapetit.42.fr`. Map this domain to your local IP (`127.0.0.1`) in `/etc/hosts`:
+The infrastructure is configured to serve under domain `shapetit.local`. Map this domain to your local IP (`127.0.0.1`) in `/etc/hosts`:
 
 ```bash
-sudo sh -c 'echo "127.0.0.1 shapetit.42.fr" >> /etc/hosts'
+sudo sh -c 'echo "127.0.0.1 shapetit.local" >> /etc/hosts'
 ```
 
 ### 3. Environment & Secrets Configuration
@@ -229,18 +227,18 @@ Verify that NGINX strictly accepts TLSv1.2 and TLSv1.3 and rejects older, insecu
 
 ```bash
 # Should connect successfully (TLS 1.2 & 1.3 supported):
-openssl s_client -connect shapetit.42.fr:443 -tls1_2
-openssl s_client -connect shapetit.42.fr:443 -tls1_3
+openssl s_client -connect shapetit.local:443 -tls1_2
+openssl s_client -connect shapetit.local:443 -tls1_3
 
 # Should fail / handshake error (TLS 1.0 & 1.1 rejected):
-openssl s_client -connect shapetit.42.fr:443 -tls1
-openssl s_client -connect shapetit.42.fr:443 -tls1_1
+openssl s_client -connect shapetit.local:443 -tls1
+openssl s_client -connect shapetit.local:443 -tls1_1
 ```
 
 ### 4. Verify Data Persistence
 Test that data survives container recreation:
-1. Connect to `https://shapetit.42.fr` in your browser.
-2. Log in to the WordPress administration panel at `https://shapetit.42.fr/wp-admin` using credentials from `secrets/credentials.txt`.
+1. Connect to `https://shapetit.local` in your browser.
+2. Log in to the WordPress administration panel at `https://shapetit.local/wp-admin` using credentials from `secrets/credentials.txt`.
 3. Create a test blog post or comment.
 4. Stop and remove the containers:
    ```bash
@@ -277,11 +275,11 @@ docker exec -it mariadb env | grep -i pass
 - [Debian Bullseye Documentation](https://www.debian.org/releases/bullseye/) — Package management and configuration in Debian base images.
 
 ### AI Usage Description
-In accordance with **Chapter IV (AI Instructions)** and **Chapter VI (Readme Requirements)** of the 42 subject, artificial intelligence tools were utilized during the development of this project as follows:
+Artificial intelligence tools were utilized during the development of this project as follows:
 - **Conceptual Clarification & Research**: AI was consulted to cross-reference Docker best practices regarding PID 1 signal propagation, the trade-offs of daemonization vs foreground execution (`php-fpm -F`, `nginx -g 'daemon off;'`), and differences between Docker named volumes with bind driver options vs standard host bind mounts.
 - **Script Review & Edge-Case Identification**: AI was used to review bash initialization scripts (`init.sh` for MariaDB and WordPress), identifying edge cases such as database readiness polling (`mysqladmin ping`) before executing WP-CLI commands and ensuring secure password piping without plain-text exposure in logs.
-- **Documentation Structuring & Formatting**: AI assisted in formatting markdown documentation, creating Mermaid architecture diagrams, and verifying that all mandatory requirements specified in the subject were addressed.
-- **Human Verification & Validation**: Every line of configuration, Dockerfile instruction, and shell script was reviewed, tested, and validated manually within the virtual machine to ensure complete understanding and personal ownership during peer evaluation.
+- **Documentation Structuring & Formatting**: AI assisted in formatting markdown documentation, creating Mermaid architecture diagrams, and verifying that all architectural and security requirements were addressed.
+- **Human Verification & Validation**: Every line of configuration, Dockerfile instruction, and shell script was reviewed, tested, and validated manually within the virtual machine to ensure complete understanding, reliability, and security.
 
 ---
 
@@ -294,5 +292,4 @@ In accordance with **Chapter IV (AI Instructions)** and **Chapter VI (Readme Req
 
 ## 👤 Author
 
-- **Login**: `shapetit`
-- **Campus**: 42
+- **Author**: `shapetit`

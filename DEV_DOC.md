@@ -589,7 +589,7 @@ Un certificat auto-signé est ensuite généré avec OpenSSL :
 Le certificat utilise :
 
 ```text
-CN=shapetit.42.fr
+CN=shapetit.local
 ```
 
 Le fichier de configuration NGINX est copié dans :
@@ -630,7 +630,7 @@ TLS 1.3
 Le serveur est associé à :
 
 ```text
-shapetit.42.fr
+shapetit.local
 ```
 
 La racine du site est :
@@ -695,7 +695,7 @@ fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
 Lorsqu'un utilisateur demande :
 
 ```text
-https://shapetit.42.fr
+https://shapetit.local
 ```
 
 le parcours est :
